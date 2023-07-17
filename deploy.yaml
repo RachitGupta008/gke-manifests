@@ -1,0 +1,170 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "2"
+    meta.helm.sh/release-name: policy-controller
+    meta.helm.sh/release-namespace: cosign-system
+  creationTimestamp: "2023-07-17T06:18:26Z"
+  generation: 2
+  labels:
+    app.kubernetes.io/instance: policy-controller
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: policy-controller
+    app.kubernetes.io/version: 0.8.0
+    control-plane: policy-controller-webhook
+    helm.sh/chart: policy-controller-0.6.0
+  name: policy-controller-webhook
+  namespace: cosign-system
+  resourceVersion: "52516"
+  uid: e8330ed7-a776-4d93-a51a-3106417bd131
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: policy-controller
+      app.kubernetes.io/name: policy-controller
+      control-plane: policy-controller-webhook
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app.kubernetes.io/instance: policy-controller
+        app.kubernetes.io/name: policy-controller
+        control-plane: policy-controller-webhook
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  control-plane: policy-controller-webhook
+              topologyKey: kubernetes.io/hostname
+            weight: 100
+      containers:
+      - env:
+        - name: SYSTEM_NAMESPACE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+        - name: KUBERNETES_MIN_VERSION
+          value: "1.13.0"
+        - name: CONFIG_LOGGING_NAME
+          value: policy-controller-webhook-logging
+        - name: CONFIG_OBSERVABILITY_NAME
+          value: policy-controller-webhook-observability
+        - name: METRICS_DOMAIN
+          value: sigstore.dev/policy
+        - name: WEBHOOK_NAME
+          value: webhook
+        - name: HOME
+          value: /home/nonroot
+        image: ghcr.io/sigstore/policy-controller/policy-controller@sha256:e91bcd954394b414d3b80adfc2cefdae84dd7985fb938a895471eb34aac57744
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 6
+          httpGet:
+            httpHeaders:
+            - name: k-kubelet-probe
+              value: webhook
+            path: /healthz
+            port: 8443
+            scheme: HTTPS
+          initialDelaySeconds: 30
+          periodSeconds: 1
+          successThreshold: 1
+          timeoutSeconds: 1
+        name: policy-controller-webhook
+        ports:
+        - containerPort: 8443
+          name: https
+          protocol: TCP
+        - containerPort: 9090
+          name: metrics
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 6
+          httpGet:
+            httpHeaders:
+            - name: k-kubelet-probe
+              value: webhook
+            path: /readyz
+            port: 8443
+            scheme: HTTPS
+          initialDelaySeconds: 20
+          periodSeconds: 1
+          successThreshold: 1
+          timeoutSeconds: 1
+        resources:
+          limits:
+            cpu: 200m
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /home/nonroot
+          name: writable-home-dir
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      serviceAccount: policy-controller-webhook
+      serviceAccountName: policy-controller-webhook
+      terminationGracePeriodSeconds: 300
+      volumes:
+      - emptyDir: {}
+        name: writable-home-dir
+status:
+  conditions:
+  - lastTransitionTime: "2023-07-17T06:18:26Z"
+    lastUpdateTime: "2023-07-17T06:18:26Z"
+    message: Deployment does not have minimum availability.
+    reason: MinimumReplicasUnavailable
+    status: "False"
+    type: Available
+  - lastTransitionTime: "2023-07-17T06:18:26Z"
+    lastUpdateTime: "2023-07-17T06:18:26Z"
+    message: 'pods "policy-controller-webhook-5c7f5bdbdb-" is forbidden: unable to
+      validate against any security context constraint: [provider "anyuid": Forbidden:
+      not usable by user or serviceaccount, spec.containers[0].securityContext.runAsUser:
+      Invalid value: 1000: must be in the ranges: [1000660000, 1000669999], provider
+      "restricted": Forbidden: not usable by user or serviceaccount, provider "nonroot-v2":
+      Forbidden: not usable by user or serviceaccount, provider "nonroot": Forbidden:
+      not usable by user or serviceaccount, provider "hostmount-anyuid": Forbidden:
+      not usable by user or serviceaccount, provider "machine-api-termination-handler":
+      Forbidden: not usable by user or serviceaccount, provider "hostnetwork-v2":
+      Forbidden: not usable by user or serviceaccount, provider "hostnetwork": Forbidden:
+      not usable by user or serviceaccount, provider "hostaccess": Forbidden: not
+      usable by user or serviceaccount, provider "privileged": Forbidden: not usable
+      by user or serviceaccount]'
+    reason: FailedCreate
+    status: "True"
+    type: ReplicaFailure
+  - lastTransitionTime: "2023-07-17T06:33:03Z"
+    lastUpdateTime: "2023-07-17T06:33:03Z"
+    message: ReplicaSet "policy-controller-webhook-6b56d8df86" has timed out progressing.
+    reason: ProgressDeadlineExceeded
+    status: "False"
+    type: Progressing
+  observedGeneration: 2
+  replicas: 1
+  unavailableReplicas: 2
+  updatedReplicas: 1

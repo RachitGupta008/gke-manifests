@@ -1,0 +1,104 @@
+    1  mkdir /root/.ssh/
+    2  chmod 700 /root/.ssh
+    3  cat << EOF > /root/.ssh/authorized_keys
+    4  ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDAtI8qt+nCpxupf9cR5N1ba3LXhNRO27Men5sk+wio6ofU3Hz4NsfP4Fd7HmSX9Qt5Q22WD8Bh2TlRmlq/JKyDtHBSh5rWCQkADiWNfou4zCIB+Agh79V6O/FMuCzVhq/xWhEGLNyX+zbokn8kO3TRbzJIDsfCSJbMXSyNLVjr1HaLsi783GySr/UDpRRPyzr4ygh1VEDBYN2DbiNN6VY8UR++J7XKNKN7BBpuO9IXJ6x7h6QpD14fO0OpKyMZtwGPOjuPBmcRW5iOuJL1npyTLvCV9qj9tYME0jOFaVeNs3U3NPG/pCJ0CVsQcIocG9LWPAUNTWiO0p82bYH2wH/9
+    5  ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDl/4SC5j9u8Bl0k4S1zSfufsf5EYDOVlSvteZ/aoRPN0UlNym8Giz4tknjsFmlPDe7R7zEOnEW100a3caW33jP+VZA/tvUpRGXqWmwhgjlNog28g5lYDen1dz9rwWhroeOtIBA7tsfRyzI7/j6/wOXVVlgosTkUCLZXW2ArCxS/sfycSN4NA8PJSr06o0L6fQt0ze4SrFt+PaRVsFNZDDu7RmZf+D9cvahMY+pj7n4foo78TQm7WrfFSoIEFYnKzHSkoVFku4f3lxRv5Fi2IEb5civJ1zkQ/rDOeKhs9+MsslxnsJTWnS3If+h33fR6VJr66T7wmhaGCk0z52Fc6Nd
+    6  EOF
+    7  restorecon /root/.ssh
+    8  restorecon /root/.ssh/authorized_keys
+    9  sed -i -e 's/PasswordAuthentication no/PasswordAuthentication yes/' -e 's/PermitRootLogin no/PermitRootLogin yes/' /etc/ssh/sshd_config
+   10  # Grab instruqt's gotty and set it up as a systemd unit
+   11  curl -L -o /usr/local/bin/gotty https://raw.githubusercontent.com/instruqt/participant-host-bootstrap/master/bootstrap/bin/gotty
+   12  chmod +x /usr/local/bin/gotty
+   13  restorecon /usr/local/bin/gotty
+   14  cat << EOF > /etc/systemd/system/gotty.service
+   15  [Unit]
+   16  Description=Instruqt Gotty
+   17  Wants=network.target
+   18  After=network-online.target
+   19  [Service]
+   20  ExecStart=/usr/local/bin/gotty --title-format "Instruqt Shell" --permit-write --port "15778" /bin/sh -c "/bin/bash"
+   21  Type=exec
+   22  [Install]
+   23  WantedBy=multi-user.target default.target
+   24  EOF
+   25  restorecon /etc/systemd/system/gotty.service
+   26  # Grab instruqt's instruqt-agent and set it up as a systemd unit
+   27  curl -L -o /usr/local/bin/instruqt-agent https://raw.githubusercontent.com/instruqt/participant-host-bootstrap/master/bootstrap/bin/instruqt-agent
+   28  chmod +x /usr/local/bin/instruqt-agent
+   29  restorecon /usr/local/bin/instruqt-agent
+   30  cat << EOF > /etc/systemd/system/instruqt-agent.service
+   31  [Unit]
+   32  Description=Instruqt Agent
+   33  Wants=network.target
+   34  After=network-online.target
+   35  [Service]
+   36  ExecStart=/usr/local/bin/instruqt-agent
+   37  Type=exec
+   38  [Install]
+   39  WantedBy=multi-user.target default.target
+   40  EOF
+   41  restorecon /etc/systemd/system/instruqt-agent.service
+   42  # Enable the new services to run at boot
+   43  systemctl enable instruqt-agent.service
+   44  systemctl enable gotty.service
+   45  loginctl enable-linger root
+   46  ls
+   47  mkdir /usr/local/test
+   48  ls
+   49  cd /usr/local/test
+   50  curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+   51  chmod 700 get_helm.sh
+   52  ./get_helm.sh
+   53  helm repo add sigstore https://sigstore.github.io/helm-charts
+   54  kubectl create namespace cosign-system
+   55  helm install policy-controller -n cosign-system sigstore/policy-controller --devel
+   56  kubectl get all -n cosign-system
+   57  kubectl describe service/webhook -n cosign-system
+   58  kubectl describe service/webhook -n cosign-system -o yaml
+   59  kubectl get service/webhook -n cosign-system -o yaml
+   60  kubectl get service/webhook -n cosign-system -o yaml >>service.yaml
+   61  more service.yaml
+   62  ls
+   63  kubectl get all -n cosign-system
+   64  kubectl describe replicaset.apps/policy-controller-webhook-5c7f5bdbdb -n cosign-system
+   65  dir
+   66  ls
+   67  kubectl get all -n cosign-system
+   68  kubectl edit deployment.apps/policy-controller-webhook -n cosign-system
+   69  kubectl get all -n cosign-system
+   70  kubectl get all -n cosign-system
+   71  kubectl get all -n cosign-system
+   72  kubectl edit pod/policy-controller-webhook-6b56d8df86-9wbgc -n cosign-system
+   73  kubectl logs  pod/policy-controller-webhook-6b56d8df86-9wbgc -n cosign-system
+   74  kubectl get all -A > all.text
+   75  more all.text
+   76  kubectl get all -n cosign-system
+   77  kubectl describe pod/policy-controller-webhook-6b56d8df86-9wbgc -n cosign-system | grep MIN
+   78  LS
+   79  ls
+   80  more service.yaml
+   81  oc version
+   82  kubectl get pod/policy-controller-webhook-6b56d8df86-9wbgc -n cosign-system
+   83  kubectl get pod/policy-controller-webhook-6b56d8df86-9wbgc -n cosign-system -o yaml >> pod.yaml
+   84  vi pod.yaml
+   85  kubectl get all -n cosign-system
+   86  kubectl get deployment.apps/policy-controller-webhook -n cosign-system -o yaml>>deploy.yaml
+   87  vi deploy.yaml
+   88  ls
+   89  cd usr/local/test
+   90  ls
+   91  vi deploy.yaml
+   92  kubectl apply -f deploy.yaml
+   93  vi deploy.yaml
+   94  kubectl apply -f deploy.yaml
+   95  vi deploy.yaml
+   96  kubectl apply -f deploy.yaml
+   97  vi deploy.yaml
+   98  kubectl apply -f deploy.yaml
+   99  kubectl get all -n cosign-system
+  100  kubectl get all -n cosign-system
+  101  ls
+  102  git clone https://github.com/RachitGupta008/gke-manifests
+  103  ls
+  104  history > history.txt
