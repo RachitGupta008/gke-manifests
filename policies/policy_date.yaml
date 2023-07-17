@@ -1,0 +1,26 @@
+apiVersion: policy.sigstore.dev/v1alpha1
+kind: ClusterImagePolicy
+metadata:
+  name: cip-key-secret
+spec:
+  images:
+  - glob: "**"
+  authorities:
+  - name: attest
+    key:
+      secretRef:
+        name: mysecret
+    attestations:
+    - name: custom-match-predicate
+      predicateType: https://cosign.sigstore.dev/attestation/v1
+      policy:
+        type: cue
+        data: |
+          import "time"
+          after: time.Parse(time.RFC3339, "2023-07-17T04:40:50Z")
+          predicateType: "https://cosign.sigstore.dev/attestation/v1"
+          predicate: {
+            Data: "test\n"
+            Timestamp: >after
+          }
+

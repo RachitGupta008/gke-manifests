@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: myapp-pod-nginx
+  namespace: my-secure-namespace # specify the namespace here
+  labels:
+    app: myapp
+spec:
+  containers:
+  - name: myapp-container
+    image: test08111997.jfrog.io/docker-trial/nginx-unsigned:unsig
+  imagePullSecrets:
+  - name: regcred2  # no namespace specified here
